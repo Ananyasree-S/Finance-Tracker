@@ -1,0 +1,1178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Finance Tracker</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #f0f4f8;
+  --surface: #ffffff;
+  --border: #e2e8f0;
+  --text: #1a202c;
+  --muted: #718096;
+  --primary: #5a67d8;
+  --primary-bg: #ebf4ff;
+  --green: #38a169;
+  --green-bg: #f0fff4;
+  --red: #e53e3e;
+  --red-bg: #fff5f5;
+  --sidebar: 220px;
+  --radius: 12px;
+  --shadow: 0 1px 6px rgba(0,0,0,.07);
+  --shadow-md: 0 4px 16px rgba(0,0,0,.10);
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  display: flex;
+  min-height: 100vh;
+}
+
+/* ── Sidebar ── */
+.sidebar {
+  width: var(--sidebar);
+  background: var(--surface);
+  border-right: 1px solid var(--border);
+  position: fixed;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  padding: 24px 0 16px;
+  box-shadow: 2px 0 8px rgba(0,0,0,.04);
+}
+.logo {
+  padding: 0 20px 22px;
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--primary);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 14px;
+  letter-spacing: -.3px;
+}
+.nav-item {
+  padding: 11px 20px;
+  margin: 2px 10px;
+  border-radius: 9px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s;
+}
+.nav-item:hover { background: var(--bg); color: var(--text); }
+.nav-item.active { background: var(--primary-bg); color: var(--primary); font-weight: 600; }
+
+/* ── Main ── */
+.main {
+  margin-left: var(--sidebar);
+  flex: 1;
+  padding: 30px 36px;
+}
+.page { display: none; }
+.page.active { display: block; }
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 26px;
+}
+.page-title { font-size: 22px; font-weight: 800; letter-spacing: -.3px; }
+
+/* ── Stat cards ── */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+  transition: box-shadow .15s;
+}
+.stat-card:hover { box-shadow: var(--shadow-md); }
+.stat-label {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+.stat-value { font-size: 28px; font-weight: 800; letter-spacing: -.5px; }
+.stat-value.green { color: var(--green); }
+.stat-value.red   { color: var(--red); }
+.stat-value.blue  { color: var(--primary); }
+
+/* ── Charts + cards ── */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 16px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px 22px;
+  box-shadow: var(--shadow);
+}
+.card-title {
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+/* ── Table ── */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th {
+  padding: 11px 16px;
+  text-align: left;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: .07em;
+  color: var(--muted);
+  font-weight: 700;
+  background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+th:hover { color: var(--text); }
+td { padding: 12px 16px; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #f7fafc; transition: background .1s; }
+
+/* ── Badges ── */
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .02em;
+}
+.badge-income    { background: var(--green-bg); color: var(--green); }
+.badge-expense   { background: var(--red-bg);   color: var(--red); }
+.badge-transfer  { background: #ebf8ff; color: #2b6cb0; }
+
+/* ── Filters ── */
+.filters {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 18px;
+  margin-bottom: 16px;
+  display: flex;
+  gap: 14px;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  box-shadow: var(--shadow);
+}
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg label { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); font-weight: 600; }
+select, input[type="date"], input[type="text"], input[type="number"], input[type="month"] {
+  padding: 8px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  color: var(--text);
+  background: var(--surface);
+  outline: none;
+  min-width: 120px;
+  transition: border-color .15s;
+}
+select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(90,103,216,.1); }
+
+/* ── Buttons ── */
+.btn {
+  padding: 9px 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all .15s;
+}
+.btn:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0,0,0,.12); }
+.btn:active { transform: translateY(0); }
+.btn-primary { background: var(--primary); color: #fff; }
+.btn-ghost   { background: transparent; border: 1px solid var(--border); color: var(--text); }
+.btn-danger  { background: var(--red); color: #fff; }
+.btn-sm      { padding: 5px 11px; font-size: 12px; }
+
+/* ── Modal ── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.4);
+  z-index: 50;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(2px);
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--surface);
+  border-radius: 16px;
+  padding: 28px 30px;
+  width: 420px;
+  max-width: 95vw;
+  box-shadow: var(--shadow-md);
+}
+.modal h2 { font-size: 18px; font-weight: 800; margin-bottom: 20px; letter-spacing: -.3px; }
+.form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-group { margin-bottom: 16px; }
+.form-group label { display: block; font-size: 13px; font-weight: 600; margin-bottom: 6px; color: var(--text); }
+.form-group input, .form-group select, .form-group textarea { width: 100%; }
+.form-group textarea {
+  padding: 9px 11px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font-size: 13px;
+  resize: vertical;
+  min-height: 64px;
+  font-family: inherit;
+}
+.modal-actions { display: flex; gap: 10px; justify-content: flex-end; margin-top: 8px; }
+
+/* ── Misc ── */
+.row-actions { display: flex; gap: 6px; }
+.empty { text-align: center; padding: 52px; color: var(--muted); font-size: 14px; }
+.amt-income { color: var(--green); font-weight: 700; }
+.amt-expense { color: var(--red); font-weight: 700; }
+</style>
+</head>
+<body>
+
+<nav class="sidebar">
+  <div class="logo"> 💰Finance Tracker</p></div>
+  <div class="nav-item active" data-page="monthly">
+    <span>📊</span> Dashboard
+  </div>
+  <div class="nav-item" data-page="dashboard">
+    <span>📅</span> Financial Year
+  </div>
+  <div class="nav-item" data-page="investments">
+    <span>📈</span> Investments
+  </div>
+  <div class="nav-item" data-page="transactions">
+    <span>📋</span> Transactions
+  </div>
+</nav>
+
+<main class="main">
+
+  <!-- Investments -->
+  <div id="page-investments" class="page">
+    <div class="page-header">
+      <div class="page-title">Investments</div>
+      <button class="btn btn-primary" onclick="openAddInv()">+ Add Snapshot</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th style="width:130px">As of Date</th>
+            <th>Notes</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="inv-body"></tbody>
+      </table>
+      <div id="inv-empty" class="empty" style="display:none">No investment snapshots yet.</div>
+    </div>
+  </div>
+
+  <!-- Year View -->
+  <div id="page-dashboard" class="page">
+    <div class="page-header">
+      <div class="page-title">Financial Year</div>
+      <div class="fg">
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Year</label>
+        <select id="year-picker" onchange="loadDashboard()" style="min-width:100px"></select>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat-card">
+        <div class="stat-label">Year Income</div>
+        <div class="stat-value green" id="s-income">₹0.00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Year Expenses</div>
+        <div class="stat-value red" id="s-expense">₹0.00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Net Balance</div>
+        <div class="stat-value blue" id="s-balance">₹0.00</div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid">
+      <div class="card">
+        <div class="card-title">Expenses by Category</div>
+        <div style="position:relative;height:260px">
+          <canvas id="pie-chart"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Monthly Income vs Expenses</div>
+        <div style="position:relative;height:260px">
+          <canvas id="year-bar-chart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions -->
+  <div id="page-transactions" class="page">
+    <div class="page-header">
+      <div class="page-title">Transactions</div>
+      <div style="display:flex;gap:8px">
+        <button class="btn btn-ghost" onclick="triggerImport()">⬆ Import HDFC</button>
+        <input type="file" id="csv-input" style="display:none" onchange="handleFileUpload(event)">
+        <button class="btn btn-primary" onclick="openAdd()">+ Add Transaction</button>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="fg">
+        <label>Type</label>
+        <select id="f-type" onchange="loadTransactions()">
+          <option value="">All</option>
+          <option value="income">Income</option>
+          <option value="expense">Expense</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label>Subcategory</label>
+        <select id="f-sub" onchange="loadTransactions()">
+          <option value="">All</option>
+        </select>
+      </div>
+      <button class="btn btn-ghost btn-sm" onclick="clearFilters()" style="margin-bottom:1px">Clear</button>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTx('date')" style="cursor:pointer;user-select:none;width:110px;white-space:nowrap">Date<span id="tx-si-date"></span></th>
+            <th onclick="sortTx('description')" style="cursor:pointer;user-select:none">Description<span id="tx-si-description"></span></th>
+            <th onclick="sortTx('subcategory')" style="cursor:pointer;user-select:none">Subcategory<span id="tx-si-subcategory"></span></th>
+            <th onclick="sortTx('type')" style="cursor:pointer;user-select:none">Type<span id="tx-si-type"></span></th>
+            <th onclick="sortTx('amount')" style="cursor:pointer;user-select:none">Amount<span id="tx-si-amount"></span></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="tx-body"></tbody>
+      </table>
+      <div id="tx-empty" class="empty" style="display:none">No transactions found.</div>
+    </div>
+  </div>
+
+
+  <!-- Monthly (shown as Dashboard) -->
+  <div id="page-monthly" class="page active">
+    <div class="page-header">
+      <div class="page-title">Dashboard</div>
+      <div class="fg">
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Month</label>
+        <input type="month" id="month-picker" onchange="loadMonthly()">
+      </div>
+    </div>
+
+    <div class="stats" style="margin-bottom:20px">
+      <div class="stat-card">
+        <div class="stat-label">Income</div>
+        <div class="stat-value green" id="m-income">₹0.00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Expenses</div>
+        <div class="stat-value red" id="m-expense">₹0.00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Net Balance</div>
+        <div class="stat-value blue" id="m-balance">₹0.00</div>
+      </div>
+    </div>
+
+    <div class="dashboard-grid" style="margin-bottom:20px">
+      <div class="card">
+        <div class="card-title">Expenses by Subcategory</div>
+        <div style="position:relative;height:260px">
+          <canvas id="m-pie"></canvas>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Daily Spending</div>
+        <div style="position:relative;height:260px">
+          <canvas id="m-bar"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortMonthly('date')" style="cursor:pointer;user-select:none;width:110px;white-space:nowrap">Date<span id="m-si-date"></span></th>
+            <th onclick="sortMonthly('description')" style="cursor:pointer;user-select:none">Description<span id="m-si-description"></span></th>
+            <th onclick="sortMonthly('subcategory')" style="cursor:pointer;user-select:none">Subcategory<span id="m-si-subcategory"></span></th>
+            <th onclick="sortMonthly('type')" style="cursor:pointer;user-select:none">Type<span id="m-si-type"></span></th>
+            <th onclick="sortMonthly('amount')" style="cursor:pointer;user-select:none">Amount<span id="m-si-amount"></span></th>
+          </tr>
+        </thead>
+        <tbody id="m-body"></tbody>
+      </table>
+      <div id="m-empty" class="empty" style="display:none">No transactions this month.</div>
+    </div>
+  </div>
+
+</main>
+
+<!-- Investment Add/Edit Modal -->
+<div class="overlay" id="modal-investment">
+  <div class="modal">
+    <h2 id="inv-modal-title">Add Investment Snapshot</h2>
+    <input type="hidden" id="inv-edit-id">
+    <div class="form-group">
+      <label>As of Date</label>
+      <input type="date" id="inv-date">
+    </div>
+    <div class="form-group">
+      <label>Notes</label>
+      <textarea id="inv-notes" style="min-height:120px" placeholder="e.g. Mutual Funds: ₹5L, Stocks: ₹2L, FD: ₹1L, Gold: ₹50K…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal('modal-investment')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveInvestment()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Add / Edit Modal -->
+<div class="overlay" id="modal">
+  <div class="modal">
+    <h2 id="modal-title">Add Transaction</h2>
+    <input type="hidden" id="edit-id">
+    <div class="form-row">
+      <div class="form-group">
+        <label>Type</label>
+        <select id="t-type" onchange="onTypeChange()">
+          <option value="expense">Expense</option>
+          <option value="income">Income</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Amount</label>
+        <input type="number" id="t-amount" placeholder="0.00" min="0.01" step="0.01">
+      </div>
+    </div>
+    <div class="form-group" id="sub-group">
+      <label>Subcategory</label>
+      <select id="t-sub"></select>
+    </div>
+    <div class="form-group">
+      <label>Date</label>
+      <input type="date" id="t-date">
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="t-desc" placeholder="Optional note…"></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary" onclick="saveTransaction()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Drilldown Modal -->
+<div class="overlay" id="modal-drilldown">
+  <div class="modal" style="width:640px;max-height:80vh;display:flex;flex-direction:column">
+    <h2 id="drilldown-title"></h2>
+    <div style="overflow-y:auto;flex:1;border:1px solid var(--border);border-radius:8px;margin-top:12px">
+      <table style="font-size:13px">
+        <thead>
+          <tr>
+            <th data-col="date" style="width:120px;cursor:pointer;user-select:none">Date <span id="dd-sort-date"></span></th>
+            <th data-col="description" style="cursor:pointer;user-select:none">Description <span id="dd-sort-description"></span></th>
+            <th data-col="amount" style="width:130px;cursor:pointer;user-select:none">Amount <span id="dd-sort-amount"></span></th>
+          </tr>
+        </thead>
+        <tbody id="drilldown-body"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+      <span id="drilldown-total" style="font-weight:600;color:var(--red)"></span>
+      <button class="btn btn-ghost" onclick="closeModal('modal-drilldown')">Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- Import Preview Modal -->
+<div class="overlay" id="modal-import">
+  <div class="modal" style="width:820px;max-height:85vh;display:flex;flex-direction:column">
+    <h2>Import HDFC Statement</h2>
+    <div style="display:flex;gap:12px;align-items:flex-end;margin-bottom:14px">
+      <div class="fg">
+        <label style="font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)">Filter by Month</label>
+        <select id="import-month-filter" onchange="filterImportMonth()" style="min-width:160px">
+          <option value="">All months</option>
+        </select>
+      </div>
+      <p id="import-summary" style="font-size:13px;color:var(--muted);margin-bottom:2px"></p>
+    </div>
+    <div style="overflow-y:auto;flex:1;border:1px solid var(--border);border-radius:8px">
+      <table style="font-size:13px">
+        <thead>
+          <tr>
+            <th style="width:32px"><input type="checkbox" id="import-check-all" onchange="toggleAllImport(this.checked)"></th>
+            <th>Date</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Amount</th>
+            <th>Subcategory</th>
+          </tr>
+        </thead>
+        <tbody id="import-body"></tbody>
+      </table>
+    </div>
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn btn-ghost" onclick="closeModal('modal-import')">Cancel</button>
+      <button class="btn btn-primary" id="import-confirm-btn" onclick="confirmImport()">Import</button>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js/dist/chart.umd.min.js"></script>
+<script>
+const fmt = n => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(n);
+const esc = s => String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const today = () => new Date().toISOString().slice(0,10);
+
+let subcategories = [];
+let pieChart = null;
+let mPieChart = null;
+let mBarChart = null;
+let yearBarChart = null;
+let dashTxs = [];
+let monthlyTxs = [];
+let allTxs = [];
+
+let txSortCol = 'date', txSortDir = 'desc';
+let mSortCol = 'date',  mSortDir = 'desc';
+
+function sortedRows(data, col, dir) {
+  return [...data].sort((a, b) => {
+    let va = a[col] ?? '', vb = b[col] ?? '';
+    if (col === 'amount') { va = +va; vb = +vb; }
+    else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
+    return dir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+  });
+}
+
+function updateSortIcons(prefix, col, dir) {
+  ['date','description','subcategory','type','amount'].forEach(c => {
+    const el = document.getElementById(`${prefix}-si-${c}`);
+    if (el) el.textContent = c === col ? (dir === 'asc' ? ' ▲' : ' ▼') : '';
+  });
+}
+
+function nextSort(col, curCol, curDir) {
+  return col === curCol
+    ? [col, curDir === 'asc' ? 'desc' : 'asc']
+    : [col, col === 'amount' ? 'desc' : 'asc'];
+}
+
+// ── Navigation ───────────────────────────────────────────────────────────────
+
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    const page = el.dataset.page;
+    document.getElementById('page-' + page).classList.add('active');
+    if (page === 'dashboard') loadDashboard();
+    if (page === 'investments') loadInvestments();
+    if (page === 'transactions') loadTransactions();
+    if (page === 'monthly') loadMonthly();
+  });
+});
+
+document.getElementById('modal').addEventListener('click', e => {
+  if (e.target === e.currentTarget) closeModal();
+});
+
+// ── API ───────────────────────────────────────────────────────────────────────
+
+async function api(path, opts = {}) {
+  const res = await fetch('/api' + path, {
+    headers: { 'Content-Type': 'application/json' },
+    ...opts,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(err);
+  }
+  return res.json();
+}
+
+// ── Subcategories ─────────────────────────────────────────────────────────────
+
+async function loadSubcategories() {
+  subcategories = await api('/subcategories');
+  const fSub = document.getElementById('f-sub');
+  fSub.innerHTML = '<option value="">All</option>' +
+    subcategories.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  populateSubSelect();
+}
+
+function populateSubSelect() {
+  const sel = document.getElementById('t-sub');
+  sel.innerHTML = subcategories.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+function onTypeChange() {
+  const isExpense = document.getElementById('t-type').value === 'expense';
+  document.getElementById('sub-group').style.display = isExpense ? 'block' : 'none';
+}
+
+// ── Drilldown ────────────────────────────────────────────────────────────────
+
+function showDrilldown(subcategory, txs) {
+  const filtered = txs.filter(t => t.subcategory === subcategory);
+  const total = filtered.reduce((s, t) => s + t.amount, 0);
+  document.getElementById('drilldown-title').textContent = subcategory;
+  document.getElementById('drilldown-total').textContent = `Total: ${fmt(total)}`;
+
+  let sortCol = 'date', sortDir = 'desc';
+
+  function renderRows() {
+    const sorted = [...filtered].sort((a, b) => {
+      let va = a[sortCol], vb = b[sortCol];
+      if (sortCol === 'amount') { va = +va; vb = +vb; }
+      else { va = String(va).toLowerCase(); vb = String(vb).toLowerCase(); }
+      return sortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    });
+    document.getElementById('drilldown-body').innerHTML = sorted.map(t => `
+      <tr>
+        <td>${esc(t.date)}</td>
+        <td>${esc(t.description) || '<span style="color:var(--muted)">—</span>'}</td>
+        <td class="amt-expense">-${fmt(t.amount)}</td>
+      </tr>`).join('');
+    ['date','description','amount'].forEach(col => {
+      const el = document.getElementById('dd-sort-' + col);
+      el.textContent = col === sortCol ? (sortDir === 'asc' ? '▲' : '▼') : '';
+    });
+  }
+
+  document.querySelectorAll('#modal-drilldown th[data-col]').forEach(th => {
+    th.onclick = () => {
+      const col = th.dataset.col;
+      if (sortCol === col) sortDir = sortDir === 'asc' ? 'desc' : 'asc';
+      else { sortCol = col; sortDir = col === 'amount' ? 'desc' : 'asc'; }
+      renderRows();
+    };
+  });
+
+  renderRows();
+  document.getElementById('modal-drilldown').classList.add('open');
+}
+
+// ── Year View ─────────────────────────────────────────────────────────────────
+
+async function loadDashboard() {
+  const yearSel = document.getElementById('year-picker');
+  if (!yearSel.options.length) {
+    const all = await api('/transactions');
+    const years = [...new Set(all.map(t => t.date.slice(0, 4)))].sort().reverse();
+    if (!years.length) years.push(String(new Date().getFullYear()));
+    years.forEach(y => yearSel.add(new Option(y, y)));
+    yearSel.value = years[0];
+  }
+  const year = parseInt(yearSel.value);
+  const txs = await api(`/transactions?start_date=${year}-01-01&end_date=${year}-12-31`);
+  dashTxs = txs;
+
+  const income  = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const expense = txs.filter(t => t.type === 'expense' && t.subcategory !== 'Self').reduce((s, t) => s + t.amount, 0);
+  document.getElementById('s-income').textContent  = fmt(income);
+  document.getElementById('s-expense').textContent = fmt(expense);
+  document.getElementById('s-balance').textContent = fmt(income - expense);
+
+  const colors = ['#5a67d8','#38a169','#dd6b20','#e53e3e','#3182ce','#d53f8c','#319795','#d69e2e'];
+
+  // Expenses by subcategory — pie
+  const bySub = {};
+  txs.forEach(t => { if (t.type === 'expense' && t.subcategory && t.subcategory !== 'Self') bySub[t.subcategory] = (bySub[t.subcategory] || 0) + t.amount; });
+  const pieLabels = Object.keys(bySub);
+  if (pieChart) pieChart.destroy();
+  pieChart = new Chart(document.getElementById('pie-chart'), {
+    type: 'doughnut',
+    data: { labels: pieLabels, datasets: [{ data: pieLabels.map(k => bySub[k]), backgroundColor: colors.slice(0, pieLabels.length), borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      cutout: '58%', maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 11, font: { size: 12 } } } },
+      onClick: (e, el) => { if (el.length) showDrilldown(pieLabels[el[0].index], dashTxs); },
+    },
+  });
+
+  // Monthly income vs expenses — grouped bar
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const mIncome = Array(12).fill(0), mExpense = Array(12).fill(0);
+  txs.forEach(t => {
+    const m = parseInt(t.date.split('-')[1], 10) - 1;
+    if (t.type === 'income') mIncome[m] += t.amount; else mExpense[m] += t.amount;
+  });
+  if (yearBarChart) yearBarChart.destroy();
+  yearBarChart = new Chart(document.getElementById('year-bar-chart'), {
+    type: 'bar',
+    data: {
+      labels: MONTHS,
+      datasets: [
+        { label: 'Income',   data: mIncome,  backgroundColor: '#38a16988', borderColor: '#38a169', borderWidth: 1 },
+        { label: 'Expenses', data: mExpense, backgroundColor: '#e53e3e88', borderColor: '#e53e3e', borderWidth: 1 },
+      ],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { position: 'top', labels: { boxWidth: 11, font: { size: 12 } } } },
+      scales: { x: { grid: { display: false } }, y: { beginAtZero: true } },
+    },
+  });
+}
+
+// ── Transactions page ────────────────────────────────────────────────────────
+
+async function loadTransactions() {
+  const type = document.getElementById('f-type').value;
+  const sub  = document.getElementById('f-sub').value;
+  const params = new URLSearchParams();
+  if (type) params.set('type', type);
+  if (sub)  params.set('subcategory', sub);
+  allTxs = await api('/transactions?' + params);
+  renderTxTable();
+}
+
+function renderTxTable() {
+  const tbody = document.getElementById('tx-body');
+  const empty = document.getElementById('tx-empty');
+  if (!allTxs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = sortedRows(allTxs, txSortCol, txSortDir).map(t => `
+    <tr>
+      <td style="white-space:nowrap">${esc(t.date)}</td>
+      <td>${esc(t.description) || '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${esc(t.subcategory) || '—'}</td>
+      <td><span class="badge badge-${t.type}">${t.type}</span></td>
+      <td class="amt-${t.type}">${t.type==='expense'?'-':'+'}${fmt(t.amount)}</td>
+      <td><div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick='openEdit(${JSON.stringify(t)})'>Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteTx(${t.id})">Delete</button>
+      </div></td>
+    </tr>`).join('');
+  updateSortIcons('tx', txSortCol, txSortDir);
+}
+
+function sortTx(col) {
+  [txSortCol, txSortDir] = nextSort(col, txSortCol, txSortDir);
+  renderTxTable();
+}
+
+function clearFilters() {
+  document.getElementById('f-type').value = '';
+  document.getElementById('f-sub').value  = '';
+  loadTransactions();
+}
+
+// ── Modal ─────────────────────────────────────────────────────────────────────
+
+function openAdd() {
+  document.getElementById('modal-title').textContent = 'Add Transaction';
+  document.getElementById('edit-id').value  = '';
+  document.getElementById('t-type').value   = 'expense';
+  document.getElementById('t-amount').value = '';
+  document.getElementById('t-date').value   = today();
+  document.getElementById('t-desc').value   = '';
+  populateSubSelect();
+  onTypeChange();
+  document.getElementById('modal').classList.add('open');
+}
+
+function openEdit(t) {
+  document.getElementById('modal-title').textContent = 'Edit Transaction';
+  document.getElementById('edit-id').value  = t.id;
+  document.getElementById('t-type').value   = t.type;
+  document.getElementById('t-amount').value = t.amount;
+  document.getElementById('t-date').value   = t.date;
+  document.getElementById('t-desc').value   = t.description || '';
+  populateSubSelect();
+  onTypeChange();
+  if (t.subcategory) document.getElementById('t-sub').value = t.subcategory;
+  document.getElementById('modal').classList.add('open');
+}
+
+function closeModal(id = 'modal') {
+  document.getElementById(id).classList.remove('open');
+}
+
+async function saveTransaction() {
+  const amount = parseFloat(document.getElementById('t-amount').value);
+  const date   = document.getElementById('t-date').value;
+  const type   = document.getElementById('t-type').value;
+  if (!amount || amount <= 0) return alert('Enter a valid amount.');
+  if (!date) return alert('Select a date.');
+
+  const body = {
+    type,
+    subcategory: type === 'expense' ? document.getElementById('t-sub').value : null,
+    amount,
+    description: document.getElementById('t-desc').value.trim(),
+    date,
+  };
+
+  const editId = document.getElementById('edit-id').value;
+  try {
+    if (editId) {
+      await api('/transactions/' + editId, { method: 'PUT', body });
+    } else {
+      await api('/transactions', { method: 'POST', body });
+    }
+    closeModal();
+    // refresh whichever page is visible
+    if (document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
+    if (document.getElementById('page-transactions').classList.contains('active')) loadTransactions();
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+async function deleteTx(id) {
+  if (!confirm('Delete this transaction?')) return;
+  await api('/transactions/' + id, { method: 'DELETE' });
+  loadTransactions();
+  if (document.getElementById('page-dashboard').classList.contains('active')) loadDashboard();
+}
+
+// ── Monthly page ──────────────────────────────────────────────────────────────
+
+async function loadMonthly() {
+  const picker = document.getElementById('month-picker');
+  if (!picker.value) return;
+  const [year, month] = picker.value.split('-');
+  const lastDay = new Date(year, month, 0).getDate();
+  const start = `${year}-${month}-01`;
+  const end   = `${year}-${month}-${String(lastDay).padStart(2,'0')}`;
+
+  const params = new URLSearchParams({ start_date: start, end_date: end });
+  const txs = await api('/transactions?' + params);
+  monthlyTxs = txs;
+  const income  = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
+  const expense = txs.filter(t => t.type === 'expense' && t.subcategory !== 'Self').reduce((s,t) => s + t.amount, 0);
+  document.getElementById('m-income').textContent  = fmt(income);
+  document.getElementById('m-expense').textContent = fmt(expense);
+  document.getElementById('m-balance').textContent = fmt(income - expense);
+
+  // Subcategory pie
+  const bySub = {};
+  txs.forEach(t => {
+    if (t.type === 'expense' && t.subcategory && t.subcategory !== 'Self') {
+      bySub[t.subcategory] = (bySub[t.subcategory] || 0) + t.amount;
+    }
+  });
+  const pieLabels = Object.keys(bySub);
+  const pieData   = pieLabels.map(k => bySub[k]);
+  const colors    = ['#6366f1','#22c55e','#f59e0b','#ef4444','#3b82f6','#ec4899','#10b981','#f97316'];
+  if (mPieChart) mPieChart.destroy();
+  mPieChart = new Chart(document.getElementById('m-pie'), {
+    type: 'doughnut',
+    data: { labels: pieLabels, datasets: [{ data: pieData, backgroundColor: colors.slice(0, pieLabels.length), borderWidth: 2, borderColor: '#fff' }] },
+    options: {
+      cutout: '58%', maintainAspectRatio: false,
+      plugins: { legend: { position: 'bottom', labels: { boxWidth: 11, font: { size: 12 } } } },
+      onClick: (e, elements) => {
+        if (!elements.length) return;
+        showDrilldown(pieLabels[elements[0].index], monthlyTxs);
+      },
+    },
+  });
+
+  // Daily bar chart
+  const daily = {};
+  for (let d = 1; d <= lastDay; d++) daily[d] = 0;
+  txs.forEach(t => {
+    if (t.type === 'expense' && t.subcategory !== 'Self') {
+      const day = parseInt(t.date.split('-')[2], 10);
+      daily[day] = (daily[day] || 0) + t.amount;
+    }
+  });
+  if (mBarChart) mBarChart.destroy();
+  mBarChart = new Chart(document.getElementById('m-bar'), {
+    type: 'bar',
+    data: {
+      labels: Object.keys(daily).map(d => parseInt(d)),
+      datasets: [{ label: 'Expenses', data: Object.values(daily), backgroundColor: '#ef444488', borderColor: '#ef4444', borderWidth: 1 }],
+    },
+    options: {
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { grid: { display: false } }, y: { beginAtZero: true } },
+    },
+  });
+
+  // Table
+  renderMonthlyTable();
+}
+
+function renderMonthlyTable() {
+  const tbody = document.getElementById('m-body');
+  const empty = document.getElementById('m-empty');
+  if (!monthlyTxs.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = sortedRows(monthlyTxs, mSortCol, mSortDir).map(t => `
+    <tr>
+      <td>${esc(t.date)}</td>
+      <td>${esc(t.description) || '<span style="color:var(--muted)">—</span>'}</td>
+      <td>${esc(t.subcategory) || '—'}</td>
+      <td><span class="badge badge-${t.type}">${t.type}</span></td>
+      <td class="amt-${t.type}">${t.type==='expense'?'-':'+'}${fmt(t.amount)}</td>
+    </tr>`).join('');
+  updateSortIcons('m', mSortCol, mSortDir);
+}
+
+function sortMonthly(col) {
+  [mSortCol, mSortDir] = nextSort(col, mSortCol, mSortDir);
+  renderMonthlyTable();
+}
+
+// ── HDFC Import ───────────────────────────────────────────────────────────────
+
+let importRows = [];
+
+function triggerImport() {
+  document.getElementById('csv-input').value = '';
+  document.getElementById('csv-input').click();
+}
+
+async function handleFileUpload(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+
+  const formData = new FormData();
+  formData.append('file', file);
+
+  try {
+    const res = await fetch('/api/import/preview', { method: 'POST', body: formData });
+    if (!res.ok) { alert(await res.text()); return; }
+    importRows = await res.json();
+  } catch (e) {
+    alert('Failed to parse file: ' + e.message);
+    return;
+  }
+
+  const subOptions = subcategories.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+  const tbody = document.getElementById('import-body');
+  tbody.innerHTML = importRows.map((t, i) => `
+    <tr${t.cc_payment ? ' style="opacity:0.55"' : ''}>
+      <td><input type="checkbox" class="import-row-check" data-i="${i}" ${t.cc_payment ? '' : 'checked'}></td>
+      <td>${esc(t.date)}</td>
+      <td style="max-width:260px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="${esc(t.description)}">
+        ${t.cc_payment ? '<span class="badge" style="background:#fef3c7;color:#92400e;margin-right:5px">CC Payment</span>' : ''}${esc(t.description)}
+      </td>
+      <td><span class="badge badge-${t.type}">${t.type}</span></td>
+      <td class="amt-${t.type}">${t.type === 'expense' ? '-' : '+'}${fmt(t.amount)}</td>
+      <td>
+        ${t.type === 'expense'
+          ? `<select class="import-sub" data-i="${i}" style="min-width:unset;font-size:12px;padding:4px 6px">
+               ${subOptions}
+             </select>`
+          : '<span style="color:var(--muted)">—</span>'
+        }
+      </td>
+    </tr>`).join('');
+
+  // Set suggested subcategory values
+  importRows.forEach((t, i) => {
+    if (t.type === 'expense') {
+      const sel = tbody.querySelector(`.import-sub[data-i="${i}"]`);
+      if (sel && t.subcategory) sel.value = t.subcategory;
+    }
+  });
+
+  // Populate month filter with unique months from parsed rows
+  const months = [...new Set(importRows.map(t => t.date.slice(0,7)))].sort();
+  const mSel = document.getElementById('import-month-filter');
+  mSel.innerHTML = '<option value="">All months</option>' +
+    months.map(m => {
+      const [y, mo] = m.split('-');
+      const label = new Date(y, mo-1).toLocaleString('default', {month:'long', year:'numeric'});
+      return `<option value="${m}">${label}</option>`;
+    }).join('');
+  // Auto-select if only one month
+  if (months.length === 1) mSel.value = months[0];
+
+  document.getElementById('import-check-all').checked = true;
+  updateImportCount();
+  filterImportMonth();
+
+  tbody.querySelectorAll('.import-row-check').forEach(cb =>
+    cb.addEventListener('change', updateImportCount)
+  );
+
+  document.getElementById('modal-import').classList.add('open');
+}
+
+function filterImportMonth() {
+  const selected = document.getElementById('import-month-filter').value;
+  document.querySelectorAll('.import-row-check').forEach(cb => {
+    const i = parseInt(cb.dataset.i);
+    const matches = !selected || importRows[i].date.startsWith(selected);
+    cb.closest('tr').style.display = matches ? '' : 'none';
+    if (matches) cb.checked = !importRows[i].cc_payment;
+  });
+  updateImportCount();
+}
+
+function toggleAllImport(checked) {
+  document.querySelectorAll('.import-row-check').forEach(cb => cb.checked = checked);
+  updateImportCount();
+}
+
+function updateImportCount() {
+  const visible = [...document.querySelectorAll('.import-row-check')]
+    .filter(cb => cb.closest('tr').style.display !== 'none');
+  const n = visible.filter(cb => cb.checked).length;
+  document.getElementById('import-confirm-btn').textContent = `Import ${n} transaction${n !== 1 ? 's' : ''}`;
+  document.getElementById('import-summary').textContent =
+    `${visible.length} rows shown — ${n} selected`;
+}
+
+async function confirmImport() {
+  const tbody = document.getElementById('import-body');
+  const selected = [];
+  document.querySelectorAll('.import-row-check:checked').forEach(cb => {
+    const i = parseInt(cb.dataset.i);
+    const t = importRows[i];
+    const subEl = tbody.querySelector(`.import-sub[data-i="${i}"]`);
+    selected.push({
+      type: t.type,
+      subcategory: t.type === 'expense' ? subEl?.value || 'Other' : null,
+      amount: t.amount,
+      description: t.description,
+      date: t.date,
+    });
+  });
+
+  if (!selected.length) return alert('No transactions selected.');
+
+  try {
+    const res = await fetch('/api/import/commit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(selected),
+    });
+    const data = await res.json();
+    closeModal('modal-import');
+    alert(`Successfully imported ${data.imported} transactions.`);
+    loadTransactions();
+  } catch (e) {
+    alert('Import failed: ' + e.message);
+  }
+}
+
+// ── Investments ───────────────────────────────────────────────────────────────
+
+let invData = [];
+
+async function loadInvestments() {
+  invData = await api('/investments');
+  renderInvTable();
+}
+
+function renderInvTable() {
+  const tbody = document.getElementById('inv-body');
+  const empty = document.getElementById('inv-empty');
+  if (!invData.length) { tbody.innerHTML = ''; empty.style.display = 'block'; return; }
+  empty.style.display = 'none';
+  tbody.innerHTML = invData.map(inv => `
+    <tr>
+      <td style="white-space:nowrap;font-weight:600">${esc(inv.date)}</td>
+      <td style="white-space:pre-wrap;font-size:13px;color:var(--text)">${esc(inv.notes)}</td>
+      <td><div class="row-actions">
+        <button class="btn btn-ghost btn-sm" onclick='openEditInv(${JSON.stringify(inv)})'>Edit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteInv(${inv.id})">Delete</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+function openAddInv() {
+  document.getElementById('inv-modal-title').textContent = 'Add Investment Snapshot';
+  document.getElementById('inv-edit-id').value = '';
+  document.getElementById('inv-date').value   = today();
+  document.getElementById('inv-notes').value  = '';
+  document.getElementById('modal-investment').classList.add('open');
+}
+
+function openEditInv(inv) {
+  document.getElementById('inv-modal-title').textContent = 'Edit Investment Snapshot';
+  document.getElementById('inv-edit-id').value = inv.id;
+  document.getElementById('inv-date').value   = inv.date;
+  document.getElementById('inv-notes').value  = inv.notes;
+  document.getElementById('modal-investment').classList.add('open');
+}
+
+async function saveInvestment() {
+  const date  = document.getElementById('inv-date').value;
+  const notes = document.getElementById('inv-notes').value.trim();
+  if (!date)  return alert('Select a date.');
+  if (!notes) return alert('Enter some notes.');
+  const body = { date, notes };
+  const editId = document.getElementById('inv-edit-id').value;
+  try {
+    if (editId) await api('/investments/' + editId, { method: 'PUT', body });
+    else        await api('/investments', { method: 'POST', body });
+    closeModal('modal-investment');
+    loadInvestments();
+  } catch (e) { alert('Error: ' + e.message); }
+}
+
+async function deleteInv(id) {
+  if (!confirm('Delete this snapshot?')) return;
+  await api('/investments/' + id, { method: 'DELETE' });
+  loadInvestments();
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+(async () => {
+  await loadSubcategories();
+  const d = new Date(); d.setMonth(d.getMonth() - 1);
+  document.getElementById('month-picker').value = d.toISOString().slice(0, 7);
+  await loadMonthly();
+})();
+</script>
+</body>
+</html>
