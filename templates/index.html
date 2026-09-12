@@ -735,7 +735,7 @@ async function loadDashboard() {
   document.getElementById('s-income').textContent   = fmt(income);
   document.getElementById('s-expense').textContent  = fmt(expense);
   document.getElementById('s-invested').textContent = fmt(invested);
-  document.getElementById('s-balance').textContent  = fmt(income - expense);
+  document.getElementById('s-balance').textContent  = fmt(income - expense - invested);
 
   const colors = ['#5a67d8','#38a169','#dd6b20','#e53e3e','#3182ce','#d53f8c','#319795','#d69e2e'];
 
@@ -756,11 +756,12 @@ async function loadDashboard() {
 
   // Monthly income vs expenses — grouped bar
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-  const mIncome = Array(12).fill(0), mExpense = Array(12).fill(0);
+  const mIncome = Array(12).fill(0), mExpense = Array(12).fill(0), mInvested = Array(12).fill(0);
   txs.forEach(t => {
     const m = parseInt(t.date.split('-')[1], 10) - 1;
     if (t.type === 'income') mIncome[m] += t.amount;
-    else if (t.type === 'expense' && t.subcategory !== 'Self' && t.subcategory !== 'Investments') mExpense[m] += t.amount;
+    else if (t.type === 'expense' && t.subcategory === 'Investments') mInvested[m] += t.amount;
+    else if (t.type === 'expense' && t.subcategory !== 'Self') mExpense[m] += t.amount;
   });
   if (yearBarChart) yearBarChart.destroy();
   yearBarChart = new Chart(document.getElementById('year-bar-chart'), {
@@ -768,8 +769,9 @@ async function loadDashboard() {
     data: {
       labels: MONTHS,
       datasets: [
-        { label: 'Income',   data: mIncome,  backgroundColor: '#38a16988', borderColor: '#38a169', borderWidth: 1 },
-        { label: 'Expenses', data: mExpense, backgroundColor: '#e53e3e88', borderColor: '#e53e3e', borderWidth: 1 },
+        { label: 'Income',    data: mIncome,   backgroundColor: '#38a16988', borderColor: '#38a169', borderWidth: 1 },
+        { label: 'Expenses',  data: mExpense,  backgroundColor: '#e53e3e88', borderColor: '#e53e3e', borderWidth: 1 },
+        { label: 'Invested',  data: mInvested, backgroundColor: '#0694a288', borderColor: '#0694a2', borderWidth: 1 },
       ],
     },
     options: {
@@ -911,7 +913,7 @@ async function loadMonthly() {
   document.getElementById('m-income').textContent   = fmt(income);
   document.getElementById('m-expense').textContent  = fmt(expense);
   document.getElementById('m-invested').textContent = fmt(invested);
-  document.getElementById('m-balance').textContent  = fmt(income - expense);
+  document.getElementById('m-balance').textContent  = fmt(income - expense - invested);
 
   // Subcategory pie
   const bySub = {};
