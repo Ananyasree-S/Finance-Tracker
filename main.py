@@ -494,9 +494,6 @@ def parse_hdfc_html_xls(text: str) -> list:
             except ValueError:
                 continue
     return rows
-            continue
-    return rows
-
 
 @app.post("/api/import/preview")
 async def import_preview(file: UploadFile = File(...)):
