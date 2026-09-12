@@ -14,6 +14,7 @@
   --muted: #718096;
   --primary: #5a67d8;
   --primary-bg: #ebf4ff;
+  --teal: #0694a2;
   --green: #38a169;
   --green-bg: #f0fff4;
   --red: #e53e3e;
@@ -87,7 +88,7 @@ body {
 /* ── Stat cards ── */
 .stats {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 16px;
   margin-bottom: 24px;
 }
@@ -112,6 +113,7 @@ body {
 .stat-value.green { color: var(--green); }
 .stat-value.red   { color: var(--red); }
 .stat-value.blue  { color: var(--primary); }
+.stat-value.teal  { color: var(--teal); }
 
 /* ── Charts + cards ── */
 .dashboard-grid {
@@ -322,6 +324,10 @@ select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
         <div class="stat-value red" id="s-expense">₹0.00</div>
       </div>
       <div class="stat-card">
+        <div class="stat-label">Year Invested</div>
+        <div class="stat-value teal" id="s-invested">₹0.00</div>
+      </div>
+      <div class="stat-card">
         <div class="stat-label">Net Balance</div>
         <div class="stat-value blue" id="s-balance">₹0.00</div>
       </div>
@@ -410,6 +416,10 @@ select:focus, input:focus { border-color: var(--primary); box-shadow: 0 0 0 3px 
       <div class="stat-card">
         <div class="stat-label">Expenses</div>
         <div class="stat-value red" id="m-expense">₹0.00</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">Invested</div>
+        <div class="stat-value teal" id="m-invested">₹0.00</div>
       </div>
       <div class="stat-card">
         <div class="stat-label">Net Balance</div>
@@ -719,17 +729,19 @@ async function loadDashboard() {
   const txs = await api(`/transactions?start_date=${year}-01-01&end_date=${year}-12-31`);
   dashTxs = txs;
 
-  const income  = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
-  const expense = txs.filter(t => t.type === 'expense' && t.subcategory !== 'Self').reduce((s, t) => s + t.amount, 0);
-  document.getElementById('s-income').textContent  = fmt(income);
-  document.getElementById('s-expense').textContent = fmt(expense);
-  document.getElementById('s-balance').textContent = fmt(income - expense);
+  const income   = txs.filter(t => t.type === 'income').reduce((s, t) => s + t.amount, 0);
+  const invested = txs.filter(t => t.type === 'expense' && t.subcategory === 'Investments').reduce((s, t) => s + t.amount, 0);
+  const expense  = txs.filter(t => t.type === 'expense' && t.subcategory !== 'Self' && t.subcategory !== 'Investments').reduce((s, t) => s + t.amount, 0);
+  document.getElementById('s-income').textContent   = fmt(income);
+  document.getElementById('s-expense').textContent  = fmt(expense);
+  document.getElementById('s-invested').textContent = fmt(invested);
+  document.getElementById('s-balance').textContent  = fmt(income - expense);
 
   const colors = ['#5a67d8','#38a169','#dd6b20','#e53e3e','#3182ce','#d53f8c','#319795','#d69e2e'];
 
   // Expenses by subcategory — pie
   const bySub = {};
-  txs.forEach(t => { if (t.type === 'expense' && t.subcategory && t.subcategory !== 'Self') bySub[t.subcategory] = (bySub[t.subcategory] || 0) + t.amount; });
+  txs.forEach(t => { if (t.type === 'expense' && t.subcategory && t.subcategory !== 'Self' && t.subcategory !== 'Investments') bySub[t.subcategory] = (bySub[t.subcategory] || 0) + t.amount; });
   const pieLabels = Object.keys(bySub);
   if (pieChart) pieChart.destroy();
   pieChart = new Chart(document.getElementById('pie-chart'), {
@@ -747,7 +759,8 @@ async function loadDashboard() {
   const mIncome = Array(12).fill(0), mExpense = Array(12).fill(0);
   txs.forEach(t => {
     const m = parseInt(t.date.split('-')[1], 10) - 1;
-    if (t.type === 'income') mIncome[m] += t.amount; else mExpense[m] += t.amount;
+    if (t.type === 'income') mIncome[m] += t.amount;
+    else if (t.type === 'expense' && t.subcategory !== 'Self' && t.subcategory !== 'Investments') mExpense[m] += t.amount;
   });
   if (yearBarChart) yearBarChart.destroy();
   yearBarChart = new Chart(document.getElementById('year-bar-chart'), {
@@ -892,16 +905,18 @@ async function loadMonthly() {
   const params = new URLSearchParams({ start_date: start, end_date: end });
   const txs = await api('/transactions?' + params);
   monthlyTxs = txs;
-  const income  = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
-  const expense = txs.filter(t => t.type === 'expense' && t.subcategory !== 'Self').reduce((s,t) => s + t.amount, 0);
-  document.getElementById('m-income').textContent  = fmt(income);
-  document.getElementById('m-expense').textContent = fmt(expense);
-  document.getElementById('m-balance').textContent = fmt(income - expense);
+  const income   = txs.filter(t => t.type === 'income').reduce((s,t) => s + t.amount, 0);
+  const invested = txs.filter(t => t.type === 'expense' && t.subcategory === 'Investments').reduce((s,t) => s + t.amount, 0);
+  const expense  = txs.filter(t => t.type === 'expense' && t.subcategory !== 'Self' && t.subcategory !== 'Investments').reduce((s,t) => s + t.amount, 0);
+  document.getElementById('m-income').textContent   = fmt(income);
+  document.getElementById('m-expense').textContent  = fmt(expense);
+  document.getElementById('m-invested').textContent = fmt(invested);
+  document.getElementById('m-balance').textContent  = fmt(income - expense);
 
   // Subcategory pie
   const bySub = {};
   txs.forEach(t => {
-    if (t.type === 'expense' && t.subcategory && t.subcategory !== 'Self') {
+    if (t.type === 'expense' && t.subcategory && t.subcategory !== 'Self' && t.subcategory !== 'Investments') {
       bySub[t.subcategory] = (bySub[t.subcategory] || 0) + t.amount;
     }
   });
@@ -926,7 +941,7 @@ async function loadMonthly() {
   const daily = {};
   for (let d = 1; d <= lastDay; d++) daily[d] = 0;
   txs.forEach(t => {
-    if (t.type === 'expense' && t.subcategory !== 'Self') {
+    if (t.type === 'expense' && t.subcategory !== 'Self' && t.subcategory !== 'Investments') {
       const day = parseInt(t.date.split('-')[2], 10);
       daily[day] = (daily[day] || 0) + t.amount;
     }
